@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gra Obrazkowa - Poziom 1</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        #game-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 1280px;
+            height: 720px;
+            background-image: url('background.png'); 
+            background-size: 100% 100%;
+            transform: translate(-50%, -50%);
+            transform-origin: center center; /* */
+        }
+
+        .sitting-bird {
+            position: absolute;
+            z-index: 150;
+            width: 50px;
+            height: auto;
+            pointer-events: none;
+            transition: all 1s ease-out; /* */
+        }
+
+        #ui-top-left {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 10; /* */
+        }
+
+        .counter-box {
+            background: #f3d2a2;
+            border: 5px solid #8b5a2b;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 35px;
+            font-weight: bold;
+            color: #4a2c00;
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.15);
+            min-width: 220px;
+            user-select: none; /* */
+        }
+
+        /* Menu Styles */
+        #menu-overlay, #selection-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #f3d2a2; /* */
+        }
+
+        #menu-overlay h1, #selection-overlay h2 { 
+            font-size: 80px; 
+            margin-bottom: 40px; 
+            text-shadow: 4px 4px 0 #8b5a2b; /* */
+        }
+
+        .settings-panel {
+            background: #f3d2a2;
+            padding: 30px; border-radius: 20px; border: 5px solid #8b5a2b;
+            color: #4a2c00; margin-bottom: 40px; width: 450px; /* */
+        }
+
+        .control-group { margin-bottom: 20px; display: flex; flex-direction: column; } /* */
+        .control-group label { font-weight: bold; margin-bottom: 10px; font-size: 20px; } /* */
+
+        .level-selection { display: flex; gap: 20px; } /* */
+        .level-selection button {
+            padding: 15px 30px; font-size: 20px; font-weight: bold;
+            background: #8b5a2b; color: white; border: none; border-radius: 15px;
+            cursor: pointer; transition: transform 0.2s; /* */
+        }
+        .level-selection button:hover { transform: scale(1.1); background: #2d5a27; } /* */
+
+        .ctrl-btn {
+            background: #8b5a2b;
+            border: 4px solid #f3d2a2;
+            border-radius: 15px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 10px 20px;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+            transition: transform 0.1s; /* */
+        }
+        .ctrl-btn:hover { transform: scale(1.05); background: #a06a3a; } /* */
+
+        #pause-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 400;
+            color: #f3d2a2;
+            font-size: 80px;
+            font-weight: bold;
+            pointer-events: none; /* */
+        }
+
+       /* Zmniejszony grid wyboru kart */
+        #selection-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px; /* nieco mniejszy odstęp */
+            justify-content: center;
+            max-width: 900px;
+        }
+
+        /* Karty w menu wyboru będą mniejsze, by zmieścić się na ekranie */
+        #selection-grid .game-card {
+            width: 90px;
+            height: 90px;
+        }
+
+        /* Przycisk odkrywania - teraz kwadrat w prawym dolnym rogu */
+        #reveal-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 30px; /* Zamiast left: 50% */
+            left: auto;
+            transform: none; /* Usuwamy centrowanie */
+            z-index: 200;
+            width: 120px;
+            height: 120px;
+            padding: 10px;
+            font-size: 18px; /* Mniejszy font do kwadratu */
+            border-radius: 20px;
+            display: none;
+            /* Wyśrodkowanie tekstu wewnątrz kwadratu */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .game-card {
+            width: 120px;
+            height: 120px;
+            background: #f3d2a2;
+            border: 5px solid #8b5a2b;
+            border-radius: 20px;
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.15); /* */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background-color: #fff;
+            transition: border-color 0.3s;
+        }
+
+      .game-card img {
+    /* Wymiary i dopasowanie (z pliku źródłowego) */
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+
+    /* LOGIKA POJAWIANIA SIĘ */
+    opacity: 0;                          /* Start: niewidoczne[cite: 1] */
+    transition: opacity 0.5s ease-in-out; /* Parametry animacji[cite: 1] */
+}
+
+/* WYZWALACZ JEDNOCZESNY */
+.reveal-all img {
+    opacity: 1 !important;               /* Koniec: widoczne */
+}
+/* Kontener zestawów w menu */
+.set-selection {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.set-btn {
+    padding: 10px 20px;
+    font-size: 18px;
+    background: #a06a3a;
+    color: white;
+    border: 3px solid #f3d2a2;
+    border-radius: 12px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+
+/* Styl dla aktywnego zestawu z ptaszkiem */
+.set-btn.active-set {
+   // background: #2d5a27;
+    border-color: #fff;
+    padding-left: 35px; /* Miejsce na ptaszka */
+}
+
+.set-btn.active-set::before {
+    content: "✓";
+    position: absolute;
+    left: 10px;
+    font-weight: bold;
+}
+
+        .card-area {
+            position: absolute;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .computer-area {
+            top: 200px;
+        }
+
+        .computer-area .game-card {
+            transform: rotate(180deg);
+        }
+
+        .player-area {
+            bottom: 50px;
+            pointer-events: none; /* Karty dziecka są tylko do podglądu */
+        }
+
+        .solved-card {
+            border-color: #4CAF50 !important;
+            pointer-events: none;
+            transform: scale(1.05) rotate(180deg); /* Zachowuje obrót u komputera */
+        }
+
+
+/* Klasa pomocnicza dla obrazków */
+.player-card-img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    pointer-events: none;
+}
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+<div id="ui-controls" style="position: absolute; top: 20px; right: 20px; z-index: 999; display: flex; gap: 10px;">
+        <!-- Pauza i Menu domyślnie ukryte -->
+        <button class="ctrl-btn" id="pause-btn" onclick="togglePause()" style="display:none;">PAUZA</button>
+        <button class="ctrl-btn" id="menu-btn" onclick="backToMenu()" style="display:none;">MENU</button>
+        
+        <!-- Pełny ekran zawsze widoczny -->
+        <button class="ctrl-btn" id="fullscreen-btn" onclick="toggleFullScreen()">PEŁNY EKRAN</button> 
+    </div>
+    <div id="pause-overlay">PAUZA</div> <!-- -->
+    
+   <div id="menu-overlay">
+    <h1>Gra Obrazkowa</h1>
+    
+    <div class="settings-panel">
+        <div class="control-group">
+            <label style="text-align:center; display:block;">Wybierz zestaw obrazków:</label>
+            <div class="set-selection">
+                <button class="set-btn active-set" id="set1-btn" onclick="selectSet('poziom1.json', 'set1-btn')">Zestaw 1</button>
+                <button class="set-btn" id="set2-btn" onclick="selectSet('poziom2.json', 'set2-btn')">Zestaw 2</button>
+                <button class="set-btn" id="set3-btn" onclick="selectSet('poziom3.json', 'set3-btn')">Zestaw 3</button>
+            </div>
+        </div>
+
+       <div class="control-group">
+    <label>Zwiększ trudność co (rund): <span id="interval-val-display">3</span></label>
+    <input type="range" id="interval-slider" min="1" max="10" step="1" value="3">
+</div>
+<div class="control-group">
+    <label>Ilość pasujących: <span id="match-val-display">2</span></label>
+    <input type="range" id="match-slider" min="1" max="3" step="1" value="2">
+</div>
+    </div>
+
+    <div class="level-selection">
+        <button onclick="startWithCurrentSet(1)">Poziom 1</button>
+        <button onclick="startWithCurrentSet(2)">Poziom 2</button>
+        <button onclick="startWithCurrentSet(3)">Poziom 3</button>
+    </div>
+</div>
+
+    <div id="selection-overlay" style="display:none;">
+        <h2>Wybierz <span id="cards-to-pick">0</span> obrazków</h2>
+        <div id="selection-grid"></div>
+    </div>
+
+
+<!-- Przycisk dla poziomu 2 -->
+<button id="reveal-btn" class="ctrl-btn" style="display:none;">ODKRYJ MOJE KARTY</button>
+    <div id="ui-top-left" style="display:none;">
+        <div class="counter-box">RUNDY: <span id="rounds-val">0</span></div>
+        <div class="counter-box">POZIOM: <span id="level-val">1</span></div>
+    </div>
+    
+    <div id="computer-area" class="card-area computer-area"></div>
+    <div id="player-area" class="card-area player-area"></div>
+</div>
+
+<script>
+    let imageLibrary = [];
+    let playerSelected = [];
+    let isPaused = false;
+    let roundsWon = 0;
+    let matchesFound = 0;
+
+let revealTimeout;
+let hideTimeout;
+
+    let gameSettings = {
+    cardsCount: 3,         // Startujemy od 3 kart
+    matchCount: 2,
+    difficultyInterval: 3  // Co ile rund dodajemy kartę
+};
+
+// Obsługa nowego suwaka interwału
+document.getElementById('interval-slider').oninput = (e) => {
+    gameSettings.difficultyInterval = parseInt(e.target.value);
+    document.getElementById('interval-val-display').innerText = gameSettings.difficultyInterval;
+};
+let currentLevel = 1;
+let isAnimating = false;
+let isRevealHeld = false;
+
+    const container = document.getElementById('game-container'); //
+    const computerArea = document.getElementById('computer-area');
+    const playerArea = document.getElementById('player-area');
+
+    // Obsługa suwaków
+    document.getElementById('cards-slider').oninput = (e) => {
+        gameSettings.cardsCount = parseInt(e.target.value);
+        document.getElementById('cards-val-display').innerText = gameSettings.cardsCount;
+        
+        const matchSlider = document.getElementById('match-slider');
+        matchSlider.max = Math.min(3, gameSettings.cardsCount);
+        if (parseInt(matchSlider.value) > matchSlider.max) {
+            matchSlider.value = matchSlider.max;
+            gameSettings.matchCount = parseInt(matchSlider.max);
+            document.getElementById('match-val-display').innerText = gameSettings.matchCount;
+        }
+    };
+
+    document.getElementById('match-slider').oninput = (e) => {
+        gameSettings.matchCount = parseInt(e.target.value);
+        document.getElementById('match-val-display').innerText = gameSettings.matchCount;
+    };
+
+    function scaleGame() {
+        const windowW = window.innerWidth;
+        const windowH = window.innerHeight;
+        const scale = Math.min(windowW / 1280, windowH / 720);
+        container.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    } //
+
+    window.addEventListener('resize', scaleGame); //
+    window.addEventListener('load', scaleGame); //
+
+    
+async function initSelection(levelFile, levelNum) {
+    try {
+        const response = await fetch(levelFile);
+        imageLibrary = await response.json();
+        
+        currentLevel = levelNum;
+        document.getElementById('level-val').innerText = currentLevel;
+        
+        playerSelected = [];
+        document.getElementById('menu-overlay').style.display = 'none';
+
+        // POZIOM 3: Pominięcie wyboru i autolosowanie
+        if (currentLevel === 3) {
+            rollPlayerCards();
+            startGame();
+            return;
+        }
+
+        document.getElementById('selection-overlay').style.display = 'flex';
+        document.getElementById('cards-to-pick').innerText = gameSettings.cardsCount;
+        
+        const grid = document.getElementById('selection-grid');
+        grid.innerHTML = '';
+        
+        imageLibrary.forEach((item) => {
+            const card = document.createElement('div');
+            card.className = 'game-card';
+            const img = document.createElement('img');
+
+            img.src = item.img;
+            card.appendChild(img);
+            
+            card.onclick = () => {
+                if (playerSelected.length >= gameSettings.cardsCount || playerSelected.includes(item)) return;
+                
+                playerSelected.push(item);
+                card.style.borderColor = '#4CAF50';
+                card.style.pointerEvents = 'none';
+                
+                if (playerSelected.length === gameSettings.cardsCount) {
+                    setTimeout(startGame, 500);
+                }
+            };
+
+        
+            grid.appendChild(card);
+        });
+// const images = Array.from(grid.querySelectorAll('img'));
+// Zastąp stary blok Promise.all na końcu funkcji:
+revealWhenReady(document.getElementById('selection-grid'));
+}
+catch (error) {
+        console.error("Błąd ładowania zestawu:", error);
+    }
+}
+
+function startGame() {
+    // Ukrywa ekran wyboru kart, nie menu
+    document.getElementById('selection-overlay').style.display = 'none';
+    
+    // Pokazuje interfejs gry
+    document.getElementById('ui-top-left').style.display = 'flex';
+    
+    // Pokazanie ukrytych przycisków Pauzy i Menu
+    document.getElementById('pause-btn').style.display = 'block';
+    document.getElementById('menu-btn').style.display = 'block';
+    
+    // Logika specyficzna dla Poziomu 2 i 3
+    if (currentLevel === 2 || currentLevel === 3) {
+        // Używamy 'flex', aby tekst w kwadracie ładnie się wyśrodkował
+        document.getElementById('reveal-btn').style.display = 'flex';
+    } else {
+        document.getElementById('reveal-btn').style.display = 'none';
+    }
+    
+    roundsWon = 0;
+    // ... reszta funkcji bez zmian (document.getElementById('rounds-val')...)
+    document.getElementById('rounds-val').innerText = roundsWon;
+    isAnimating = false;
+    
+    renderPlayerCards();
+    generateComputerCards();
+}
+
+    function renderPlayerCards() {
+        playerArea.innerHTML = '';
+  playerSelected.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'game-card';
+    const img = document.createElement('img');
+ 
+    // Na Poziomie 2 ustawiamy smoka, na Poziomie 1 od razu właściwy obrazek
+    // Na Poziomie 2 i 3 ustawiamy smoka, na Poziomie 1 od razu właściwy obrazek
+    img.src = (currentLevel === 2 || currentLevel === 3) ? 'smok.png' : item.img;
+    
+    // Zawsze przechowujemy realną ścieżkę w atrybucie danych do celów odkrywania
+    img.dataset.realSrc = item.img;
+    img.className = 'player-card-img';
+    
+    card.appendChild(img);
+    playerArea.appendChild(card);
+
+});
+// const images = Array.from(playerArea.querySelectorAll('img'));
+   // Zastąp stary blok Promise.all na końcu funkcji:
+// Zastąp stary blok Promise.all na końcu funkcji:
+revealWhenReady(playerArea);
+
+    }
+
+  function generateComputerCards() {
+    computerArea.innerHTML = '';
+    matchesFound = 0;
+
+    let shuffledSelected = [...playerSelected].sort(() => 0.5 - Math.random());
+    let matches = shuffledSelected.slice(0, gameSettings.matchCount);
+
+    let nonSelectedPool = imageLibrary.filter(x => !playerSelected.includes(x));
+    let shuffledNonSelected = [...nonSelectedPool].sort(() => 0.5 - Math.random());
+    let nonMatches = shuffledNonSelected.slice(0, gameSettings.cardsCount - gameSettings.matchCount);
+
+    let computerDeck = [...matches, ...nonMatches].sort(() => 0.5 - Math.random());
+
+    computerDeck.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'game-card';
+        const img = document.createElement('img');
+
+        img.src = item.img;
+        img.dataset.realSrc = item.img; // Do przywracania po smoku
+        img.className = 'computer-card-img';
+        card.appendChild(img);
+
+  
+
+
+        card.onclick = () => {
+            if (isPaused || isAnimating) return; 
+if (playerSelected.includes(item)) {
+    card.classList.add('solved-card');
+    matchesFound++; 
+    
+    if (matchesFound === gameSettings.matchCount) {
+        roundsWon++;
+        document.getElementById('rounds-val').innerText = roundsWon;
+        
+        // Logika progresji:
+        if (roundsWon % gameSettings.difficultyInterval === 0 && gameSettings.cardsCount < 6) {
+            gameSettings.cardsCount++;
+        }
+        
+        isAnimating = true; 
+        spawnBird();
+        
+        setTimeout(() => {
+            isAnimating = false;
+            
+            if (currentLevel === 3) {
+                rollPlayerCards();
+                renderPlayerCards();
+                generateComputerCards();
+            } else {
+                // Dla Poziomu 1 i 2: jeśli liczba kart wzrosła, gracz musi dobrać karty
+                if (playerSelected.length < gameSettings.cardsCount) {
+                    initSelection(currentLibraryFile, currentLevel);
+                } else {
+                    generateComputerCards();
+                }
+            }
+        }, 2000);
+    }
+}
+else {
+                card.style.borderColor = '#f44336';
+                setTimeout(() => {
+                    if (!card.classList.contains('solved-card')) card.style.borderColor = '#8b5a2b';
+                }, 500);
+            }
+        };
+        // ... reszta pętli computerDeck.forEach bez zmian ...
+    computerArea.appendChild(card);
+});
+
+// POPRAWKA: Najpierw ustawiamy co ma być widoczne, potem odpalamy revealWhenReady
+if (currentLevel === 3 && isRevealHeld) {
+    document.querySelectorAll('.computer-card-img').forEach(img => img.src = 'smok.png');
+    document.querySelectorAll('.player-card-img').forEach(img => img.src = img.dataset.realSrc);
+}
+
+// Teraz revealWhenReady sprawdzi stan faktyczny po podmianach powyżej
+revealWhenReady(computerArea);
+revealWhenReady(playerArea);
+}
+
+
+    // Kod animacji ptaka z oryginalnego skryptu
+    function spawnBird() {
+        const birdId = Math.floor(Math.random() * 6) + 1; //
+        const newBird = document.createElement('img'); //
+        newBird.className = 'sitting-bird'; //
+        newBird.src = `bird${birdId}2.png`; //
+
+        const startX = Math.random() > 0.5 ? -150 : 1350; //
+        const startY = Math.random() * 500; //
+
+        if (startX > 1280) { //
+            newBird.style.transform = 'scaleX(-1)'; //
+        } else {
+            newBird.style.transform = 'scaleX(1)'; //
+        }
+
+        newBird.style.left = startX + 'px'; //
+        newBird.style.top = startY + 'px'; //
+        container.appendChild(newBird); //
+
+        const targetX = Math.floor(Math.random() * (1000 - 700 + 1)) + 700; //
+        const targetY = Math.floor(Math.random() * (250 - 100 + 1)) + 100; //
+
+        newBird.getBoundingClientRect(); //
+
+        newBird.style.left = targetX + 'px'; //
+        newBird.style.top = targetY + 'px'; //
+        
+        setTimeout(() => {
+            newBird.src = `bird${birdId}.png`; //
+        }, 1000); //
+    }
+
+    function togglePause() {
+        isPaused = !isPaused; //
+        const btn = document.getElementById('pause-btn'); //
+        const overlay = document.getElementById('pause-overlay'); //
+
+        if (isPaused) {
+            btn.innerText = "WZNÓW"; //
+            overlay.style.display = 'flex'; //
+            computerArea.style.pointerEvents = 'none';
+        } else {
+            btn.innerText = "PAUZA"; //
+            overlay.style.display = 'none'; //
+            computerArea.style.pointerEvents = 'auto';
+        }
+    }
+function backToMenu() {
+    isPaused = false; 
+    isAnimating = false; 
+    isRevealHeld = false; 
+    playerSelected = [];
+    
+    clearTimeout(revealTimeout);
+    clearTimeout(hideTimeout);
+    
+    document.getElementById('menu-overlay').style.display = 'flex'; 
+    document.getElementById('selection-overlay').style.display = 'none';
+    document.getElementById('ui-top-left').style.display = 'none'; 
+    
+    // Ukrywamy tylko Pauzę i Menu (Pełny ekran zostaje widoczny)
+    document.getElementById('pause-btn').style.display = 'none';
+    document.getElementById('menu-btn').style.display = 'none';
+    
+    document.getElementById('pause-overlay').style.display = 'none'; 
+    // ... reszta funkcji bez zmian (document.getElementById('reveal-btn')...)
+    document.getElementById('reveal-btn').style.display = 'none'; 
+    document.getElementById('pause-btn').innerText = "PAUZA"; 
+    
+    computerArea.innerHTML = '';
+    playerArea.innerHTML = '';
+    document.querySelectorAll('.sitting-bird').forEach(b => b.remove()); 
+}
+
+    function toggleFullScreen() {
+        const doc = window.document; //
+        const docEl = doc.documentElement; //
+
+        const request = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen; //
+        const exit = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen; //
+        const isFull = doc.fullscreenElement || doc.mozFullScreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement; //
+
+        if (!isFull) {
+            if (request) request.call(docEl); //
+        } else {
+            if (exit) exit.call(doc); //
+        }
+    } //
+
+    document.addEventListener('fullscreenchange', () => {
+        const btn = document.getElementById('fullscreen-btn'); //
+        if (document.fullscreenElement) {
+            btn.innerText = "OKNO"; //
+        } else {
+            btn.innerText = "PEŁNY EKRAN"; //
+        }
+    }); 
+
+function showCards(e) {
+    if(e) e.preventDefault();
+    if(isPaused || isAnimating) return;
+    
+    isRevealHeld = true;
+    computerArea.style.pointerEvents = 'none'; 
+
+    if (currentLevel === 3) {
+        clearTimeout(hideTimeout);
+        
+        // 1. Ukrywamy oba obszary (usuwamy klasę), by przygotować nową animację
+        computerArea.classList.remove('reveal-all');
+        playerArea.classList.remove('reveal-all');
+
+        // 2. Zmieniamy źródła
+        document.querySelectorAll('.computer-card-img').forEach(img => img.src = 'smok.png');
+        
+        // 3. Czekamy na załadowanie smoków i pokazujemy je naraz
+        revealWhenReady(computerArea);
+
+        revealTimeout = setTimeout(() => {
+            if (isRevealHeld) {
+                document.querySelectorAll('.player-card-img').forEach(img => img.src = img.dataset.realSrc);
+                // 4. Pokazujemy Twoje odkryte karty naraz
+                revealWhenReady(playerArea);
+            }
+        }, 1000);
+
+    } else if (currentLevel === 2) {
+        document.querySelectorAll('.player-card-img').forEach(img => img.src = img.dataset.realSrc);
+        revealWhenReady(playerArea);
+    }
+}
+
+function hideCards(e) {
+    if(e) e.preventDefault();
+    isRevealHeld = false;
+    
+    if (currentLevel === 3) {
+        clearTimeout(revealTimeout);
+        
+        // Przygotowanie do ukrycia/zmiany
+        playerArea.classList.remove('reveal-all');
+        computerArea.classList.remove('reveal-all');
+
+        document.querySelectorAll('.player-card-img').forEach(img => img.src = 'smok.png');
+        revealWhenReady(playerArea);
+        
+        hideTimeout = setTimeout(() => {
+            if (!isRevealHeld && !isPaused) {
+                document.querySelectorAll('.computer-card-img').forEach(img => img.src = img.dataset.realSrc);
+                revealWhenReady(computerArea);
+                if (!isAnimating) computerArea.style.pointerEvents = 'auto';
+            }
+        }, 1000);
+
+    } else if (currentLevel === 2) {
+        playerArea.classList.remove('reveal-all');
+        document.querySelectorAll('.player-card-img').forEach(img => img.src = 'smok.png');
+        revealWhenReady(playerArea);
+        if (!isAnimating && !isPaused) computerArea.style.pointerEvents = 'auto';
+    }
+}
+function rollPlayerCards() {
+    let shuffled = [...imageLibrary].sort(() => 0.5 - Math.random());
+    playerSelected = shuffled.slice(0, gameSettings.cardsCount);
+}
+
+// Na samym początku skryptu, tam gdzie inne zmienne let
+let currentLibraryFile = 'poziom1.json';
+
+// Funkcja zmiany zestawu
+function selectSet(fileName, btnId) {
+    currentLibraryFile = fileName;
+    
+    // Usuwamy klasę active ze wszystkich przycisków zestawów
+    document.querySelectorAll('.set-btn').forEach(btn => {
+        btn.classList.remove('active-set');
+    });
+    
+    // Dodajemy do klikniętego
+    document.getElementById(btnId).classList.add('active-set');
+}
+
+// Funkcja uruchamiająca grę z aktualnym zestawem
+function startWithCurrentSet(levelNum) {
+    gameSettings.cardsCount = 3; // Reset do wartości początkowej
+    initSelection(currentLibraryFile, levelNum);
+}
+
+function revealWhenReady(container) {
+    // 1. Ukrywamy wszystko natychmiast
+    container.classList.remove('reveal-all');
+    
+    // 2. Wymuszenie reflow – przeglądarka MUSI zarejestrować, że karty są niewidoczne
+    void container.offsetWidth; 
+
+    const images = Array.from(container.querySelectorAll('img'));
+    
+    Promise.all(images.map(img => {
+        return new Promise(resolve => {
+            // Sprawdzenie czy obrazek jest już w pełni gotowy
+            if (img.complete && img.naturalWidth !== 0) resolve();
+            else {
+                img.onload = resolve;
+                img.onerror = resolve; 
+            }
+        });
+    })).then(() => {
+        // 3. Podwójny requestAnimationFrame – czekamy na następną klatkę renderowania[cite: 4]
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                container.classList.add('reveal-all');
+            });
+        });
+    });
+}
+
+// Rejestracja zdarzeń (mysz i dotyk)
+const revealBtn = document.getElementById('reveal-btn');
+revealBtn.addEventListener('mousedown', showCards);
+revealBtn.addEventListener('touchstart', showCards, {passive: false});
+revealBtn.addEventListener('mouseup', hideCards);
+revealBtn.addEventListener('mouseleave', hideCards);
+revealBtn.addEventListener('touchend', hideCards, {passive: false});
+
+</script>
+
+</body>
+</html>
