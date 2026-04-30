@@ -1,0 +1,22 @@
+[
+  { "word": "AUTO", "img": "poziom3/auto.png" },
+  { "word": "BLOK", "img": "poziom3/blok.png" },
+  { "word": "BUTY", "img": "poziom3/buty.png" },
+  { "word": "IGŁA", "img": "poziom3/igła.png" },
+  { "word": "KIWI", "img": "poziom3/kiwi.png" },
+  { "word": "KOŁO", "img": "poziom3/koło.png" },
+  { "word": "KRAB", "img": "poziom3/krab.png" },
+  { "word": "KRAN", "img": "poziom3/kran.png" },
+  { "word": "LIST", "img": "poziom3/list.png" },
+  { "word": "LODY", "img": "poziom3/lody.png" },
+  { "word": "MEWA", "img": "poziom3/mewa.png" },
+  { "word": "MOST", "img": "poziom3/most.png" },
+  { "word": "OKNO", "img": "poziom3/okno.png" },
+  { "word": "PARK", "img": "poziom3/park.png" },
+  { "word": "PIES", "img": "poziom3/pies.png" },
+  { "word": "PŁOT", "img": "poziom3/płot.png" },
+  { "word": "SMOK", "img": "poziom3/smok.png" },
+  { "word": "TORT", "img": "poziom3/tort.png" },
+  { "word": "WILK", "img": "poziom3/wilk.png" },
+  { "word": "ZEBRA", "img": "poziom3/zebra.png" }
+]

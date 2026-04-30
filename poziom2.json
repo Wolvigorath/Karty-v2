@@ -1,0 +1,22 @@
+[
+  { "word": "BUDA", "img": "poziom2/buda.png" },
+  { "word": "FALA", "img": "poziom2/fala.png" },
+  { "word": "KINO", "img": "poziom2/kino.png" },
+  { "word": "KOZA", "img": "poziom2/koza.png" },
+  { "word": "KURA", "img": "poziom2/kura.png" },
+  { "word": "LAMA", "img": "poziom2/lama.png" },
+  { "word": "LINA", "img": "poziom2/lina.png" },
+  { "word": "ŁAPA", "img": "poziom2/łapa.png" },
+  { "word": "MAKI", "img": "poziom2/maki.png" },
+  { "word": "MAMA", "img": "poziom2/mama.png" },
+  { "word": "MAPA", "img": "poziom2/mapa.png" },
+  { "word": "NUTA", "img": "poziom2/nuta.png" },
+  { "word": "POLE", "img": "poziom2/pole.png" },
+  { "word": "RAMA", "img": "poziom2/rama.png" },
+  { "word": "ROGI", "img": "poziom2/rogi.png" },
+  { "word": "RYBA", "img": "poziom2/ryba.png" },
+  { "word": "SOWA", "img": "poziom2/sowa.png" },
+  { "word": "TATA", "img": "poziom2/tata.png" },
+  { "word": "WODA", "img": "poziom2/woda.png" },
+  { "word": "ZUPA", "img": "poziom2/zupa.png" }
+]

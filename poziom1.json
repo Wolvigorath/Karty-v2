@@ -1,0 +1,22 @@
+[
+  { "word": "BUT", "img": "poziom1/but.png" },
+  { "word": "DOM", "img": "poziom1/dom.png" },
+  { "word": "ELF", "img": "poziom1/elf.png" },
+  { "word": "GRA", "img": "poziom1/gra.png" },
+  { "word": "KOC", "img": "poziom1/koc.png" },
+  { "word": "KOT", "img": "poziom1/kot.png" },
+  { "word": "LAS", "img": "poziom1/las.png" },
+  { "word": "LEW", "img": "poziom1/lew.png" },
+  { "word": "LIS", "img": "poziom1/lis.png" },
+  { "word": "MUS", "img": "poziom1/mus.png" },
+  { "word": "NOS", "img": "poziom1/nos.png" },
+  { "word": "OKO", "img": "poziom1/oko.png" },
+  { "word": "OSA", "img": "poziom1/osa.png" },
+  { "word": "PAN", "img": "poziom1/pan.png" },
+  { "word": "PAS", "img": "poziom1/pas.png" },
+  { "word": "RAK", "img": "poziom1/rak.png" },
+  { "word": "SAD", "img": "poziom1/sad.png" },
+  { "word": "SER", "img": "poziom1/ser.png" },
+  { "word": "SOK", "img": "poziom1/sok.png" },
+  { "word": "UL", "img": "poziom1/ul.png" }
+]
