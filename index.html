@@ -347,19 +347,7 @@ let isRevealHeld = false;
     const computerArea = document.getElementById('computer-area');
     const playerArea = document.getElementById('player-area');
 
-    // Obsługa suwaków
-    document.getElementById('cards-slider').oninput = (e) => {
-        gameSettings.cardsCount = parseInt(e.target.value);
-        document.getElementById('cards-val-display').innerText = gameSettings.cardsCount;
-        
-        const matchSlider = document.getElementById('match-slider');
-        matchSlider.max = Math.min(3, gameSettings.cardsCount);
-        if (parseInt(matchSlider.value) > matchSlider.max) {
-            matchSlider.value = matchSlider.max;
-            gameSettings.matchCount = parseInt(matchSlider.max);
-            document.getElementById('match-val-display').innerText = gameSettings.matchCount;
-        }
-    };
+   
 
     document.getElementById('match-slider').oninput = (e) => {
         gameSettings.matchCount = parseInt(e.target.value);
@@ -434,27 +422,18 @@ catch (error) {
 }
 
 function startGame() {
-    // Ukrywa ekran wyboru kart, nie menu
     document.getElementById('selection-overlay').style.display = 'none';
-    
-    // Pokazuje interfejs gry
     document.getElementById('ui-top-left').style.display = 'flex';
-    
-    // Pokazanie ukrytych przycisków Pauzy i Menu
     document.getElementById('pause-btn').style.display = 'block';
     document.getElementById('menu-btn').style.display = 'block';
     
-    // Logika specyficzna dla Poziomu 2 i 3
     if (currentLevel === 2 || currentLevel === 3) {
-        // Używamy 'flex', aby tekst w kwadracie ładnie się wyśrodkował
         document.getElementById('reveal-btn').style.display = 'flex';
     } else {
         document.getElementById('reveal-btn').style.display = 'none';
     }
     
-    roundsWon = 0;
-    // ... reszta funkcji bez zmian (document.getElementById('rounds-val')...)
-    document.getElementById('rounds-val').innerText = roundsWon;
+    // USUNIĘTO: roundsWon = 0; (przeniesione do startWithCurrentSet)
     isAnimating = false;
     
     renderPlayerCards();
@@ -755,9 +734,10 @@ function selectSet(fileName, btnId) {
     document.getElementById(btnId).classList.add('active-set');
 }
 
-// Funkcja uruchamiająca grę z aktualnym zestawem
 function startWithCurrentSet(levelNum) {
-    gameSettings.cardsCount = 3; // Reset do wartości początkowej
+    gameSettings.cardsCount = 3; // Reset trudności
+    roundsWon = 0;              // Reset punktów przy starcie nowej gry
+    document.getElementById('rounds-val').innerText = roundsWon;
     initSelection(currentLibraryFile, levelNum);
 }
 
